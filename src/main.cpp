@@ -58,6 +58,9 @@ void loop() {
   // Collect new data.
   flora->loop();
 
+  mqttTransmitter->teardown();
+  mqtt->teardown();
+  wifi->teardown();
 
   // Go to sleep.
   esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_ON);
