@@ -9,6 +9,10 @@ namespace garden {
     this->tryConnect();
   }
 
+  bool WiFi::isConnected() {
+    return ::WiFi.status() == WL_CONNECTED;
+  }
+
   bool WiFi::tryConnect() {
     if (::WiFi.status() != WL_CONNECTED) {
       Serial.println("Trying to connect to WiFi");

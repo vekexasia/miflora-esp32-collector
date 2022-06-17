@@ -5,6 +5,7 @@ namespace garden {
     public:
       void setup();
       void teardown();
+      bool isConnected();
     private:
       bool tryConnect();
   };

@@ -4,7 +4,7 @@
 #include <BLEDevice.h>
 #include "../transmitters/transmitter.h"
 
-char *FLORA_DEVICES[] = FLORA_DEVICES_D;
+char *FLORA_DEVICES[] = FLORA_DEVICES_ALL;
 
 // device count
 int FLORA_DEVICES_COUNT = sizeof FLORA_DEVICES / sizeof FLORA_DEVICES[0];

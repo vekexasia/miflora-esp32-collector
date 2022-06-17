@@ -35,13 +35,7 @@ void setup() {
   mqttTransmitter = new garden::MQTTTransmitter();
   flora = new garden::Flora(mqttTransmitter);
 
-  wifi->setup();
-
-  mqtt->setup();
-
-  mqttTransmitter->setup();
-
-  flora->setup();
+  
   Serial.println("ZIOLUPO");
 
 
@@ -51,25 +45,23 @@ void loop() {
   // Try spooling old messages if any
   Serial.println("Loop");
 
-  mqtt->loop();
-  mqttTransmitter->spool();
+  wifi->setup();
+  mqtt->setup();
+  mqttTransmitter->setup();
+  flora->setup();
 
-  Serial.println("AfterSpool");
-  // Collect new data.
+  if (wifi->isConnected()) {
+    mqtt->loop();
+    mqttTransmitter->spool();
+  }
+
   flora->loop();
 
   mqttTransmitter->teardown();
   mqtt->teardown();
   wifi->teardown();
-
-  // Go to sleep.
-  esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_ON);
-	esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_ON);
-	esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
   // Serial.println("Waiting for restart");
-  // delay(10 * 1000);
-  // ESP.restart();
-	esp_sleep_enable_timer_wakeup(((uint64_t) 10) * 1000000);
-	esp_deep_sleep_start();
-
+  delay(10 * 1000);
+  ESP.restart();
+	
 }
