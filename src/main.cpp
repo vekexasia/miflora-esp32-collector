@@ -24,10 +24,20 @@ garden::MQTT *mqtt;
 garden::MQTTTransmitter *mqttTransmitter;
 
 Preferences prefs;
+TaskHandle_t restartTaskHandle = NULL;
+
+
+void delayedRestart(void *parameter) {
+  Serial.println("task started");
+  delay(300000); // delay for five minutes
+  Serial.println("Something got stuck, entering emergency hibernate...");
+  ESP.restart();
+}
 
 void setup() {
   // nvs_flash_init();
   Serial.begin(115200);
+
   prefs.begin("floraData");
 
   wifi = new garden::WiFi();
@@ -44,6 +54,7 @@ void setup() {
 void loop() {
   // Try spooling old messages if any
   Serial.println("Loop");
+  xTaskCreate(delayedRestart, "restart", 4096, NULL, 1, &restartTaskHandle);
 
   wifi->setup();
   mqtt->setup();
@@ -62,6 +73,9 @@ void loop() {
   wifi->teardown();
   // Serial.println("Waiting for restart");
   delay(10 * 1000);
-  ESP.restart();
+  vTaskDelete(restartTaskHandle);
+
+
+
 	
 }
