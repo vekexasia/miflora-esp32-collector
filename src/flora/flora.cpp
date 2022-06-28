@@ -17,6 +17,8 @@ static BLEUUID uuid_version_battery("00001a02-0000-1000-8000-00805f9b34fb");
 static BLEUUID uuid_sensor_data("00001a01-0000-1000-8000-00805f9b34fb");
 static BLEUUID uuid_write_mode("00001a00-0000-1000-8000-00805f9b34fb");
 garden::MifloraData mifloraData;
+BLEScan* pBLEScan;
+
 namespace garden {
 
   
@@ -28,35 +30,41 @@ void Flora::setup() {
   BLEDevice::init("ESP32");
   // BLEDevice::setPower(ESP_PWR_LVL_P9);
   //  // process devices
+  pBLEScan = BLEDevice::getScan();
+  pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+  pBLEScan->setInterval(100);
+  pBLEScan->setWindow(99);  // less or equal setInterval value
   esp_bt_controller_enable(ESP_BT_MODE_BLE);
 	esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
 }
 
 void Flora::loop() {
-        this->transmitter->broadcast(&mifloraData);
+  BLEScanResults foundDevices = pBLEScan->start(5, false);
 
-  for (int i=0; i<FLORA_DEVICES_COUNT; i++) {
-    int tryCount = 0;
-    char* deviceMacAddress = FLORA_DEVICES[i];
-    BLEAddress floraAddress(deviceMacAddress);
-
-    while (tryCount < 1) {
-      tryCount++;
-       Serial.println("random");
-      this->transmitter->broadcast(&mifloraData);
-      if (this->processFloraDevice(floraAddress, deviceMacAddress, esp_random() % 3 == 0, tryCount)) {
-        Serial.println("ALL GOOD");
-        this->transmitter->broadcast((&mifloraData));
-        memcpy(mifloraData.identifier, deviceMacAddress, 18);
-        Serial.println("YO");
-        this->transmitter->broadcast(&mifloraData);
-        Serial.println("PD");
-        break;
-      }
-      delay(1000);
+Serial.print("Devices found: ");
+  Serial.println(foundDevices.getCount());
+  for (int j=0; j<foundDevices.getCount(); j++) {
+    BLEAddress discoveredAddr = foundDevices.getDevice(j).getAddress();
+    for (int i=0; i<FLORA_DEVICES_COUNT; i++) {
+        char* deviceMacAddress = FLORA_DEVICES[i];
+        BLEAddress floraAddress(deviceMacAddress);
+        if (floraAddress.equals(discoveredAddr)) {
+            Serial.print(deviceMacAddress); Serial.println("Found");
+            if (this->processFloraDevice(floraAddress, deviceMacAddress, esp_random() % 3 == 0, 1)) {
+                Serial.println("ALL GOOD");
+                memcpy(mifloraData.identifier, deviceMacAddress, 18);
+                this->transmitter->broadcast(&mifloraData);
+                Serial.println("PD");    
+            }
+            delay(1000);
+            break;
+        }
+        
     }
-    delay(1500);
   }
+  Serial.println("Scan done!");
+  pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
+  
 }
 
 void Flora::teardown() {

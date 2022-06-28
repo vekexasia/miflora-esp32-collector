@@ -72,8 +72,9 @@ void loop() {
   mqtt->teardown();
   wifi->teardown();
   // Serial.println("Waiting for restart");
-  delay(10 * 1000);
+  delay(60 * 1000);
   vTaskDelete(restartTaskHandle);
+  ESP.restart();
 
 
 
